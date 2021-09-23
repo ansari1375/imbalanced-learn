@@ -73,12 +73,12 @@ RandomUnderSampler # doctest: +NORMALIZE_WHITESPACE
 
     @_deprecate_positional_args
     def __init__(
-        self, *, sampling_strategy="auto", random_state=None, replacement=False
+        self, *, sorted=True, sampling_strategy="auto", random_state=None, replacement=False
     ):
         super().__init__(sampling_strategy=sampling_strategy)
         self.random_state = random_state
         self.replacement = replacement
-
+        self.sorted = sorted
     def _check_X_y(self, X, y):
         y, binarize_y = check_target_type(y, indicate_one_vs_all=True)
         X, y = self._validate_data(
@@ -116,8 +116,9 @@ RandomUnderSampler # doctest: +NORMALIZE_WHITESPACE
             )
 
         self.sample_indices_ = idx_under
-
-        return _safe_indexing(X, idx_under), _safe_indexing(y, idx_under)
+        if self.sorted:
+            self.sample_indices_.sort()
+        return X[self.sample_indices_], y[self.sample_indices_]
 
     def _more_tags(self):
         return {
