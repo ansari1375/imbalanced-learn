@@ -126,6 +126,7 @@ RandomOverSampler # doctest: +NORMALIZE_WHITESPACE
     @_deprecate_positional_args
     def __init__(
         self,
+        sorted=True,
         *,
         sampling_strategy="auto",
         random_state=None,
@@ -134,7 +135,7 @@ RandomOverSampler # doctest: +NORMALIZE_WHITESPACE
         super().__init__(sampling_strategy=sampling_strategy)
         self.random_state = random_state
         self.shrinkage = shrinkage
-
+        self.sorted = sorted
     def _check_X_y(self, X, y):
         y, binarize_y = check_target_type(y, indicate_one_vs_all=True)
         X, y = self._validate_data(
@@ -233,14 +234,15 @@ RandomOverSampler # doctest: +NORMALIZE_WHITESPACE
             y_resampled.append(_safe_indexing(y, bootstrap_indices))
 
         self.sample_indices_ = np.array(sample_indices)
-
+        if self.sorted:
+            self.sample_indices_.sort()
         if sparse.issparse(X):
             X_resampled = sparse.vstack(X_resampled, format=X.format)
         else:
             X_resampled = np.vstack(X_resampled)
         y_resampled = np.hstack(y_resampled)
 
-        return X_resampled, y_resampled
+        return X[self.sample_indices_], y[self.sample_indices_]
 
     def _more_tags(self):
         return {
